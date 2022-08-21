@@ -98,6 +98,7 @@ def newLink(message):
     # Only admin allowed functions
     link = message.text
     user = message.from_user.id
+    print('link received')
     if 'flipkart' not in link and 'amazon' not in link:
         bot.send_message(user, 'This is not a valid link.')
 
@@ -122,7 +123,7 @@ def getMessage():
 @server.route("/")
 def webhook():
     bot.remove_webhook()
-    bot.set_webhook(url='https://telejobreminder.herokuapp.com/' + TOKEN)
+    bot.set_webhook(url='https://tele-price-tracker.herokuapp.com/' + TOKEN)
     return '''<div style="text-align: center;">
     <h1>Jobs Reminder</h1>
     <h3>A Telegram bot that notifies you about your computer jobs.</h3>
