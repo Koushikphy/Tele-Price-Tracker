@@ -38,8 +38,9 @@ class DataBase:
 
     def addItem(self,user,link):
         # try:
+        print('here')
         name, price = queryPrice([link])[0]
-
+        print(name,price)
         with self.con:
             with self.con.cursor() as cur:
                 cur.execute('INSERT into ITEMS (userId, link, name,price) values (%s,%s,%s,%s) '
