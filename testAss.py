@@ -30,6 +30,10 @@ async def main():
         return values
 
 
+def test():
+    return asyncio.run(main())
+
+
 s= time()
 asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 aa = asyncio.run(main())

@@ -86,11 +86,14 @@ async def check_price(session, url:str):
         return price,title #prints the price
 
 
-async def queryPrice(URLs):
+async def auxqueryPrice(URLs):
     async with aiohttp.ClientSession() as session:
         tasks = [asyncio.ensure_future(check_price(session, u)) for u in URLs]
         return await asyncio.gather(*tasks)
 
+
+def queryPrice():
+    return asyncio.run(auxqueryPrice())
 
 
 
