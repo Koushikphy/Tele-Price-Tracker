@@ -20,20 +20,20 @@ async def check_price(session, url):
         # for amazon
         # title = soup.find("span", {"id": "productTitle"}).get_text()
         # price = soup.find("span", {"class": "a-offscreen"}).get_text()[1:].replace(',','')
-        print(price,title) #prints the price
+        return price,title #prints the price
 
 
 async def main():
     async with aiohttp.ClientSession() as session:
-        tasks = []
-        for url in URLs:
-            tasks.append(asyncio.ensure_future(check_price(session, url)))
-        await asyncio.gather(*tasks)
+        tasks = [asyncio.ensure_future(check_price(session, url)) for url in URLs]
+        values = await asyncio.gather(*tasks)
+        return values
 
 
 s= time()
 asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
-asyncio.run(main())
+aa = asyncio.run(main())
+print(aa)
 # print("--- %s seconds ---" % (time.time() - start_time))
 
 print(time()-s)
