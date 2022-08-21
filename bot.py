@@ -33,11 +33,6 @@ class DataBase:
                 "link TEXT NOT NULL,"
                 "name TEXT NOT NULL,"
                 "price INTEGER NOT NULL);"
-                "CREATE TABLE IF NOT EXISTS USERIDS ("
-                " userid INTEGER NOT NULL UNIQUE,"
-                " name TEXT NOT NULL);"
-                "INSERT into USERIDS (userid,name) values (%s,%s) "
-                "ON CONFLICT (userid) DO NOTHING",(ADMIN,ADMIN_NAME)
                 )
     
 
