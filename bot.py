@@ -75,7 +75,7 @@ async def check_price(session, url:str):
     async with session.get(url) as resp:
         page = await resp.read()
         soup = BeautifulSoup(page, 'html.parser')
-
+        print(url)
         if 'flipkart' in url: # if flipkart
             title = soup.find("span", {"class": "B_NuCI"}).get_text()
             price = soup.find("div", {"class": "_30jeq3 _16Jk6d"}).get_text()[1:].replace(',','')
@@ -83,6 +83,7 @@ async def check_price(session, url:str):
         elif 'amazon' in url:# for amazon
             title = soup.find("span", {"id": "productTitle"}).get_text()
             price = soup.find("span", {"class": "a-offscreen"}).get_text()[1:].replace(',','')
+        print(title,price)
         return price,title #prints the price
 
 
