@@ -7,8 +7,8 @@ from bs4 import BeautifulSoup #used to parse websites
 import telebot
 
 
-TOKEN = os.getenv("TEL_API")
-ADMIN = os.getenv('TEL_ADMIN')
+TOKEN = os.getenv("TOKEN")
+ADMIN = os.getenv('ADMIN')
 dbURL = os.getenv('DATABASE_URL')
 ADMIN_NAME = "Koushik Naskar"
 server = Flask(__name__)
