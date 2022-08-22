@@ -45,7 +45,7 @@ class DataBase:
 
         with self.con:
             with self.con.cursor() as cur:
-                cur.execute('INSERT into ITEMS (userId, link, name,price) values (%s,%s,%s,%s) ',(user,link,name,price))
+                cur.execute('INSERT into ITEMS (userId, link, name,price) values (%s,%s,%s,%s) ',(user,link,name,66))
                 print('Inserted into database')
 
                 bot.send_message(user,f'<i> {name}</i> is added for tracking. Current price: <b> {price} </b>')
@@ -92,7 +92,7 @@ async def check_price(session:ClientSession, url:str):
             title = soup.find("span", {"id": "productTitle"}).get_text()
             price = soup.find("span", {"class": "a-offscreen"}).get_text()[1:].replace(',','')
         print('checking price',title,price)
-        return title,int(price) #prints the price
+        return title,price #prints the price
 
 
 async def auxqueryPrice(URLs):
