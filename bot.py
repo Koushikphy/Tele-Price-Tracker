@@ -5,7 +5,7 @@ import aiohttp
 import asyncio
 from bs4 import BeautifulSoup #used to parse websites
 import telebot
-
+from aiohttp import ClientSession
 
 TOKEN = os.getenv("TOKEN")
 ADMIN = os.getenv('ADMIN')
@@ -75,7 +75,7 @@ db = DataBase()
 
 
 
-async def check_price(session, url:str):
+async def check_price(session:ClientSession, url:str):
     async with session.get(url) as resp:
         page = await resp.read()
         soup = BeautifulSoup(page, 'html.parser')
@@ -84,7 +84,7 @@ async def check_price(session, url:str):
             title = soup.find("span", {"class": "B_NuCI"}).get_text()
             price = soup.find("div", {"class": "_30jeq3 _16Jk6d"}).get_text()[1:].replace(',','')
         
-        elif 'amazon' in url or amzn in url:# for amazon
+        elif 'amazon' in url or 'amzn' in url:# for amazon
             title = soup.find("span", {"id": "productTitle"}).get_text()
             price = soup.find("span", {"class": "a-offscreen"}).get_text()[1:].replace(',','')
         print('checking price',title,price)
@@ -92,7 +92,7 @@ async def check_price(session, url:str):
 
 
 async def auxqueryPrice(URLs):
-    async with aiohttp.ClientSession() as session:
+    async with ClientSession() as session:
         tasks = [asyncio.ensure_future(check_price(session, u)) for u in URLs]
         return await asyncio.gather(*tasks)
 
