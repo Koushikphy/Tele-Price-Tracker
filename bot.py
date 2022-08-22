@@ -41,13 +41,15 @@ class DataBase:
         print('here')
         name, price = queryPrice([link])[0]
         print('--------',name,price,user)
+        # bot.send_message(user,'fuyfuyff')
+
         with self.con:
             with self.con.cursor() as cur:
                 cur.execute('INSERT into ITEMS (userId, link, name,price) values (%s,%s,%s,%s) ',(user,link,name,price))
                 print('here-------------------')
                 print('--------',name,price,user)
 
-                bot.send_message(user,f'<i> {name} is added for tracking. Current price <b> {price} </b>')
+                bot.send_message(user,f'<i> {name}</i> is added for tracking. Current price: <b> {price} </b>')
         # except Exception as e:
         #     bot.send_message(user,"Failed to add the link. Check if its a proper link")
         #     print(e)
@@ -82,10 +84,10 @@ async def check_price(session, url:str):
             title = soup.find("span", {"class": "B_NuCI"}).get_text()
             price = soup.find("div", {"class": "_30jeq3 _16Jk6d"}).get_text()[1:].replace(',','')
         
-        elif 'amazon' in url:# for amazon
+        elif 'amazon' in url or amzn in url:# for amazon
             title = soup.find("span", {"id": "productTitle"}).get_text()
             price = soup.find("span", {"class": "a-offscreen"}).get_text()[1:].replace(',','')
-        # print(title,price)
+        print('checking price',title,price)
         return title,price #prints the price
 
 
@@ -106,8 +108,8 @@ def newLink(message):
     link = message.text
     user = message.from_user.id
     print('link received')
-    if 'flipkart' not in link and 'amazon' not in link:
-        bot.send_message(user, 'This is not a valid link.')
+    # if 'flipkart' not in link and 'amazon' not in link:
+    #     bot.send_message(user, 'This is not a valid link.')
 
     # try to get the product name and price
     db.addItem(user,link)
