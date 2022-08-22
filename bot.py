@@ -38,18 +38,18 @@ class DataBase:
 
     def addItem(self,user,link):
         # try:
-        print('here')
+        print('adding new iterm')
         name, price = queryPrice([link])[0]
-        print('--------',name,price,user)
+        print('details of the item',name,price,user)
         # bot.send_message(user,'fuyfuyff')
 
         with self.con:
             with self.con.cursor() as cur:
                 cur.execute('INSERT into ITEMS (userId, link, name,price) values (%s,%s,%s,%s) ',(user,link,name,price))
-                print('here-------------------')
-                print('--------',name,price,user)
+                print('Inserted into database')
 
                 bot.send_message(user,f'<i> {name}</i> is added for tracking. Current price: <b> {price} </b>')
+                print('sending message')
         # except Exception as e:
         #     bot.send_message(user,"Failed to add the link. Check if its a proper link")
         #     print(e)
@@ -59,12 +59,15 @@ class DataBase:
 
 
     def checkItems(self, user):
+        print('checking items for',user)
         with self.con:
             with self.con.cursor() as cur:
                 cur.execute('SELECT link,name,price from ITEMS where userId=%s',(user.id,))
                 values = cur.fetchall()
+                print('all values')
                 links = [i[0] for i in values]
                 newValues = queryPrice(links)
+                print(newValues)
                 txt = '\n\n'.join( f'{i}. <i>{t}</i> (<b>{p}</b>)' for i,(p,t) in enumerate(newValues,start=1)  )
                 bot.send_message(user,txt)
 
@@ -77,6 +80,7 @@ db = DataBase()
 
 async def check_price(session:ClientSession, url:str):
     async with session.get(url) as resp:
+        print("checking price for ",url)
         page = await resp.read()
         soup = BeautifulSoup(page, 'html.parser')
         # print(url)
@@ -118,6 +122,7 @@ def newLink(message):
 @bot.message_handler(commands='listall')
 def send_listAllJobs(message):
     # List all jobs for the current user
+    print('list all for ', message.from_user.id)
     db.checkItems(message.from_user.id)
 
         
