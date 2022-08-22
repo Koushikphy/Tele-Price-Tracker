@@ -85,7 +85,7 @@ async def check_price(session, url:str):
             title = soup.find("span", {"id": "productTitle"}).get_text()
             price = soup.find("span", {"class": "a-offscreen"}).get_text()[1:].replace(',','')
         # print(title,price)
-        return price,title #prints the price
+        return title,price #prints the price
 
 
 async def auxqueryPrice(URLs):
