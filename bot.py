@@ -119,11 +119,11 @@ def newLink(message):
     db.addItem(user,link)
     
 
-@bot.message_handler(commands='listall')
-def send_listAllJobs(message):
-    # List all jobs for the current user
-    print('list all for ', message.from_user.id)
-    db.checkItems(message.from_user.id)
+# @bot.message_handler(commands='listall')
+# def send_listAllJobs(message):
+#     # List all jobs for the current user
+#     print('list all for ', message.from_user.id)
+#     db.checkItems(message.from_user.id)
 
         
 
