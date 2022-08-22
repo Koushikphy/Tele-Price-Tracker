@@ -42,10 +42,12 @@ class DataBase:
         name, price = queryPrice([link])[0]
         print('details of the item',name,price,user)
         # bot.send_message(user,'fuyfuyff')
+        priceInPaisa = int(price)*100
+        print('priceInPaise',priceInPaisa)
 
         with self.con:
             with self.con.cursor() as cur:
-                cur.execute('INSERT into ITEMS (userId, link, name,price) values (%s,%s,%s,%s) ',(user,link,name,66))
+                cur.execute('INSERT into ITEMS (userId, link, name,price) values (%s,%s,%s,%s) ',(user,link,name,priceInPaisa))
                 print('Inserted into database')
 
                 bot.send_message(user,f'<i> {name}</i> is added for tracking. Current price: <b> {price} </b>')
