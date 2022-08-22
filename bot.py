@@ -40,11 +40,12 @@ class DataBase:
         # try:
         print('here')
         name, price = queryPrice([link])[0]
-        print(name,price)
+        print('--------',name,price)
         with self.con:
             with self.con.cursor() as cur:
                 cur.execute('INSERT into ITEMS (userId, link, name,price) values (%s,%s,%s,%s) '
                     ' ON CONFLICT (userid) DO NOTHING',(user,link,name,price))
+                print('here-------------------')
                 bot.send_message(user,f'<i> {name} is added for tracking. Current price <b> {price} </b>')
         # except Exception as e:
         #     bot.send_message(user,"Failed to add the link. Check if its a proper link")
