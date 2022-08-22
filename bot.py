@@ -43,8 +43,7 @@ class DataBase:
         print('--------',name,price)
         with self.con:
             with self.con.cursor() as cur:
-                cur.execute('INSERT into ITEMS (userId, link, name,price) values (%s,%s,%s,%s) '
-                    ' ON CONFLICT (userid) DO NOTHING',(user,link,name,price))
+                cur.execute('INSERT into ITEMS (userId, link, name,price) values (%s,%s,%s,%s) ',(user,link,name,price))
                 print('here-------------------')
                 bot.send_message(user,f'<i> {name} is added for tracking. Current price <b> {price} </b>')
         # except Exception as e:
@@ -112,6 +111,10 @@ def newLink(message):
     db.addItem(user,link)
     
 
+@bot.message_handler(commands='listall')
+def send_listAllJobs(message):
+    # List all jobs for the current user
+    db.checkItems(message.from_user.id)
 
         
 
