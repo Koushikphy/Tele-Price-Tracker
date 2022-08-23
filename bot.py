@@ -158,15 +158,17 @@ def newLink(message):
     # Only admin allowed functions
     link = message.text
     user = message.from_user.id
-    print('link received')
-    # if 'flipkart' not in link and 'amazon' not in link:
-    #     bot.send_message(user, 'This is not a valid link.')
-
-    # try to get the product name and price
-    db.addItem(user,link)
-
-    if message.text == '/listall':
+    if link == '/listall':
+        print('list required')
         db.checkItems()
+    else:
+        print('link received')
+        # if 'flipkart' not in link and 'amazon' not in link:
+        #     bot.send_message(user, 'This is not a valid link.')
+
+        # try to get the product name and price
+        db.addItem(user,link)
+
     
 
 # @bot.message_handler(commands='listall')
