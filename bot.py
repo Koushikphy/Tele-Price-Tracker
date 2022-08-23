@@ -47,6 +47,7 @@ class DataBase:
         name,price = check_price_flipkart(link)
         print('details of the item',name,price,user)
         priceInPaisa = price
+
         try:
             priceInPaisa = int(price)*100
         except Exception as e:
@@ -57,12 +58,17 @@ class DataBase:
             with self.con.cursor() as cur:
                 cur.execute("SELECT count(*) from ITEMS where link=%s",(link,))
                 v = cur.fetchone()
-                print('Number of existing data base items--------------',v)
-                cur.execute('INSERT into ITEMS (userId, link, name,price) values (%s,%s,%s,%s) ON CONFLICT (link) DO NOTHING',(user,link,name,priceInPaisa))
-                print('Inserted into database')
 
-                bot.send_message(user,f'<i> {name}</i> is added for tracking. \nCurrent price: <b> {price} </b>')
-                print('sending message')
+                if v[0]==0:
+                    print('Number of existing data base items--------------',v)
+                    cur.execute('INSERT into ITEMS (userId, link, name,price) values (%s,%s,%s,%s) ON CONFLICT (link) DO NOTHING',(user,link,name,priceInPaisa))
+                    print('Inserted into database')
+
+                    bot.send_message(user,f'<i> {name}</i> is added for tracking. \nCurrent price: <b> {price} </b>')
+                    print('sending message')
+                else:
+                    bot.send_message(user,'Link is already in database')
+
         # except Exception as e:
         #     bot.send_message(user,"Failed to add the link. Check if its a proper link")
         #     print(e)
