@@ -122,12 +122,16 @@ def check_price_flipkart(url:str):
     soup = BeautifulSoup(page.content, 'html.parser')
     print('checking price for the link',url)
     if 'flipkart' in url: # if flipkart
+        print('checking for flipkart')
         title = soup.find("span", {"class": "B_NuCI"}).get_text()
         price = soup.find("div", {"class": "_30jeq3 _16Jk6d"}).get_text()[1:].replace(',','')
     
     elif 'amazon' in url or 'amzn' in url:# for amazon
+        print('checking for amazon')
         title = soup.find("span", {"id": "productTitle"}).get_text()
+        print(title)
         price = soup.find("span", {"class": "a-offscreen"}).get_text()[1:].replace(',','')
+        print(price)
     print('queried successfully',price,title) #prints the price
     return title,price
 
