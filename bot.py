@@ -42,7 +42,11 @@ class DataBase:
         name, price = queryPrice([link])[0]
         print('details of the item',name,price,user)
         # bot.send_message(user,'fuyfuyff')
-        priceInPaisa = int(price)*100
+        priceInPaisa = price
+        try:
+            priceInPaisa = int(price)*100
+        except Exception as e:
+            print(e)
         print('priceInPaise',priceInPaisa)
 
         with self.con:
