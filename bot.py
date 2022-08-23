@@ -121,6 +121,7 @@ def check_price_flipkart(url:str):
     page = requests.get(url, headers=headers)
     soup = BeautifulSoup(page.content, 'html.parser')
     print('checking price for the link',url)
+    print(soup)
     if 'flipkart' in url: # if flipkart
         print('checking for flipkart')
         title = soup.find("span", {"class": "B_NuCI"}).get_text()
