@@ -34,7 +34,7 @@ class DataBase:
                 cur.execute( "CREATE TABLE IF NOT EXISTS ITEMS("
                 "itemID SERIAL PRIMARY KEY,"
                 "userId INTEGER NOT NULL,"
-                "link TEXT NOT NULL,"
+                "link TEXT NOT NULL UNIQUE,"
                 "name TEXT NOT NULL,"
                 "price INTEGER NOT NULL);"
                 )
@@ -55,7 +55,10 @@ class DataBase:
 
         with self.con:
             with self.con.cursor() as cur:
-                cur.execute('INSERT into ITEMS (userId, link, name,price) values (%s,%s,%s,%s) ',(user,link,name,priceInPaisa))
+                cur.execute("SELECT count(*) from ITEMS where link=%s",(link,))
+                v = cur.fetchone()
+                print('Number of existing data base items--------------',v)
+                cur.execute('INSERT into ITEMS (userId, link, name,price) values (%s,%s,%s,%s) ON CONFLICT (link) DO NOTHING',(user,link,name,priceInPaisa))
                 print('Inserted into database')
 
                 bot.send_message(user,f'<i> {name}</i> is added for tracking. \nCurrent price: <b> {price} </b>')
@@ -86,6 +89,9 @@ class DataBase:
 db = DataBase()
 
 
+# ----------------------------------------------------------
+# amazon does not allow the web scrapping from the cloud, it blocks the heroku ip address
+# will get back to it later
 
 
 async def check_price(session:ClientSession, url:str):
@@ -98,9 +104,9 @@ async def check_price(session:ClientSession, url:str):
             title = soup.find("span", {"class": "B_NuCI"}).get_text()
             price = soup.find("div", {"class": "_30jeq3 _16Jk6d"}).get_text()[1:].replace(',','')
         
-        elif 'amazon' in url or 'amzn' in url:# for amazon
-            title = soup.find("span", {"id": "productTitle"}).get_text()
-            price = soup.find("span", {"class": "a-offscreen"}).get_text()[1:].replace(',','')
+        # elif 'amazon' in url or 'amzn' in url:# for amazon
+        #     title = soup.find("span", {"id": "productTitle"}).get_text()
+        #     price = soup.find("span", {"class": "a-offscreen"}).get_text()[1:].replace(',','')
         print('checking price',title,price)
         return title,price #prints the price
 
@@ -121,18 +127,19 @@ def check_price_flipkart(url:str):
     page = requests.get(url, headers=headers)
     soup = BeautifulSoup(page.content, 'html.parser')
     print('checking price for the link',url)
-    print(soup)
+    # print(soup)
     if 'flipkart' in url: # if flipkart
         print('checking for flipkart')
         title = soup.find("span", {"class": "B_NuCI"}).get_text()
         price = soup.find("div", {"class": "_30jeq3 _16Jk6d"}).get_text()[1:].replace(',','')
-    
-    elif 'amazon' in url or 'amzn' in url:# for amazon
-        print('checking for amazon')
-        title = soup.find("span", {"id": "productTitle"}).get_text()
-        print(title)
-        price = soup.find("span", {"class": "a-offscreen"}).get_text()[1:].replace(',','')
-        print(price)
+    else:
+        print('Unknown website')
+    # elif 'amazon' in url or 'amzn' in url:# for amazon
+    #     print('checking for amazon')
+    #     title = soup.find("span", {"id": "productTitle"}).get_text()
+    #     print(title)
+    #     price = soup.find("span", {"class": "a-offscreen"}).get_text()[1:].replace(',','')
+    #     print(price)
     print('queried successfully',price,title) #prints the price
     return title,price
 
