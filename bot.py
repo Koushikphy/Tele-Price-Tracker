@@ -160,7 +160,7 @@ def newLink(message):
     user = message.from_user.id
     if link == '/listall':
         print('list required')
-        db.checkItems()
+        db.checkItems(user)
     else:
         print('link received')
         # if 'flipkart' not in link and 'amazon' not in link:
