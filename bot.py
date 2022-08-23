@@ -164,6 +164,9 @@ def newLink(message):
 
     # try to get the product name and price
     db.addItem(user,link)
+
+    if message.text == '/listall':
+        db.checkItems()
     
 
 # @bot.message_handler(commands='listall')
