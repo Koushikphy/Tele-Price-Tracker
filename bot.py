@@ -106,7 +106,6 @@ class DataBase:
         return txt
 
 
-    
     def untrack(self,user,_prompt):
         try:
             prompt = _prompt.strip('/untrack').strip()
@@ -148,9 +147,9 @@ class DataBase:
 db = DataBase()
 
 
-# ----------------------------------------------------------
+# NOTE:----------------------------------------------------------
 # amazon does not allow the web scrapping from the cloud, it blocks the heroku ip address
-# will get back to it later
+# will solve this later
 
 
 async def check_price(session:ClientSession, url:str):
