@@ -20,7 +20,16 @@ server = Flask(__name__)
 
 bot= telebot.TeleBot(TOKEN, parse_mode='HTML')
 
+class SafeCursor:
+    def __init__(self, connection):
+        self.con = connection
 
+    def __enter__(self):
+        self.cursor = self.con.cursor()
+        return self.cursor
+
+    def __exit__(self, typ, value, traceback):
+        self.cursor.close()
 
 class DataBase:
     def __init__(self):
@@ -52,7 +61,7 @@ class DataBase:
                         cur.execute(
                             'INSERT into ITEMS (userId, link, name,addedPrice, price) values (%s,%s,%s,%s,%s)',
                             (user,link,name,price,price))
-                        bot.send_message(user,f'The following product is added for tracking.\n<i> {name}</i> \nCurrent Price: <b> {price} </b>')
+                        bot.send_message(user,f'The following product is added for tracking.\n<i>{name}</i> \nCurrent Price: <b>{price}</b>')
                     else:
                         bot.send_message(user,'Link is already in database')
         except InvalidURL:
@@ -70,7 +79,7 @@ class DataBase:
         try:
             message = bot.send_message(user, "Checking prices🧐. Please wait.")
             with self.con:
-                with self.con.cursor() as cur:
+                with SafeCursor(self.con) as cur:
                     cur.execute('SELECT link from ITEMS where userId=%s',(user,))
                     links = [i for (i,) in cur.fetchall()]
                     if len(links)==0:
@@ -97,7 +106,7 @@ class DataBase:
         txt = "Here is your current product list.\n"
         txt += f"<b>{'-'*50}</b>\n\n"
         for i,(title,price,addedPrice,link) in enumerate(info):
-            txt += f"{i+1}. <a href='{link}'><i>{title}</i></a>\n Price: <b>{price}</b>"
+            txt += f"{i+1}. <a href='{link}'><i>{title}</i></a>\nPrice: <b>{price}</b>"
             if price-addedPrice>0:
                 txt += f" [&#x25B2;{addedPrice}]"
             elif price-addedPrice<0:
@@ -120,7 +129,7 @@ class DataBase:
                         txt = "Choose the link beside the product to untrack.\n"
                         txt += f"<b>{'-'*50}</b>\n\n"
                         for i,(iID,name) in enumerate(values):
-                            txt += f"{i+1}. {name} /untrack{iID} \n"
+                            txt += f"{i+1}. {name}\n/untrack{iID} \n"
                         bot.send_message(user,txt)
             else: # untrack item
                 with self.con:
@@ -199,7 +208,7 @@ def check_price_flipkart(url:str):
 
 def helpMessage(user):
     bot.send_message(user,(
-        'Send a product link and this bot track the price for you.\n'
+        'Send a product link and this bot will track the price for you.\n'
         'Send /check to check prices for all the products in the list.\n'
         'Send /untrack to untrack products.\n'
         'Currently only supports link for flipkart.'
@@ -248,7 +257,7 @@ def webhook():
     bot.set_webhook(url='https://tele-price-tracker.herokuapp.com/' + TOKEN)
     return '''<div style="text-align: center;">
     <h1>Tele Price Tracker</h1>
-    <h3>Send a product link and this bot track the price for you.</h3>
+    <h3>Send a product link and this bot will track the price for you.</h3>
     <h2>Open <br><a href="https://t.me/telepricetrackerbot"> https://t.me/telepricetrackerbot</a> <br> to access the bot.</h2>
     </div>''', 200
 
