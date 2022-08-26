@@ -46,12 +46,12 @@ def check_price_flipkart(url):
 
 # check_price_flipkart()
 
-# def check_price_amazon():
-#     page = requests.get(URL, headers=headers)
-#     soup = BeautifulSoup(page.content, 'html.parser')
-#     title = soup.find("span", {"id": "productTitle"}).get_text()
-#     price = soup.find("span", {"class": "a-offscreen"}).get_text()[1:].replace(',','')
-#     print(price,title) #prints the price
+def check_price_amazon():
+    page = requests.get(URL, headers=headers)
+    soup = BeautifulSoup(page.content, 'html.parser')
+    title = soup.find("span", {"id": "productTitle"}).get_text()
+    price = soup.find("span", {"class": "a-offscreen"}).get_text()[1:].replace(',','')
+    print(price,title) #prints the price
 
 # check_price_amazon()
 

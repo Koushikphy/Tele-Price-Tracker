@@ -1,1 +1,4 @@
 items.txt
+.env
+*.db
+*.log
