@@ -8,6 +8,8 @@ from aiohttp import ClientSession
 from aiohttp.client_exceptions import InvalidURL
 import requests # used to fetch websites
 import traceback
+from time import sleep
+from threading import Timer
 
 headers = { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.130 Safari/537.36' }
 
@@ -20,21 +22,11 @@ server = Flask(__name__)
 
 bot= telebot.TeleBot(TOKEN, parse_mode='HTML')
 
-class SafeCursor:
-    def __init__(self, connection):
-        self.con = connection
-
-    def __enter__(self):
-        self.cursor = self.con.cursor()
-        return self.cursor
-
-    def __exit__(self, typ, value, traceback):
-        self.cursor.close()
 
 class DataBase:
     def __init__(self):
         self.dbFile = dbURL
-        self.con = connect(dbURL)
+        self.con = connect(self.dbFile)
         with self.con:
             with self.con.cursor() as cur:
                 # create database tables and insert admin details
@@ -48,8 +40,18 @@ class DataBase:
                 )
     
 
+    def connectToDb(self):
+        # flyio postgresql disconnects after 30 minutes of inactivity
+        if self.con.closed !=0:
+            self.con = connect(self.dbFile)
+            sleep(1)
+
     def addItem(self,user,link):
         try:
+            self.connectToDb()
+            if 'amazon' in link or 'amzn' in link:
+                bot.send_message(user,"Currently this bot doesn't support Amazon links.")
+                return
             message = bot.send_message(user, "Searching for the product🧐. Please wait.")
             with self.con:
                 with self.con.cursor() as cur:
@@ -57,17 +59,24 @@ class DataBase:
                     v = cur.fetchone()
 
                     if v[0]==0:
-                        name,price = queryPrice([link])[0]
-                        cur.execute(
-                            'INSERT into ITEMS (userId, link, name,addedPrice, price) values (%s,%s,%s,%s,%s)',
-                            (user,link,name,price,price))
-                        bot.send_message(user,f'The following product is added for tracking.\n<i>{name}</i> \nCurrent Price: <b>{price}</b>')
+                        
+                        newValues = queryPrice([link])
+                        if newValues:
+                            name,price = newValues[0]
+                            cur.execute(
+                                'INSERT into ITEMS (userId, link, name,addedPrice, price) values (%s,%s,%s,%s,%s)',
+                                (user,link,name,price,price))
+                            bot.send_message(user,f'The following product is added for tracking.\n<i>{name}</i> \nCurrent Price: <b>{price}</b>')
+                        else:
+                            bot.send_message(user,'Unable to find the product.')
+
                     else:
                         bot.send_message(user,'Link is already in database')
         except InvalidURL:
             bot.send_message(user,'Unable to find the product. Check if the link is ok.')
         except:
             print(traceback.format_exc())
+            bot.send_message(user,'Unable to find the product.')
         finally:
             bot.delete_message(message.chat.id, message.message_id)
 
@@ -77,25 +86,67 @@ class DataBase:
     def update(self,user):
         # list the items from the database and also query the site for latest price
         try:
+            self.connectToDb()
             message = bot.send_message(user, "Checking prices🧐. Please wait.")
             with self.con:
-                with SafeCursor(self.con) as cur:
+                with self.con.cursor() as cur:
                     cur.execute('SELECT link from ITEMS where userId=%s',(user,))
                     links = [i for (i,) in cur.fetchall()]
                     if len(links)==0:
                         bot.send_message(user,'No items found on list')
                         return
                     newValues = queryPrice(links)
+                    if newValues:
 
-                    for l,(_,p) in zip(links,newValues):
-                        cur.execute("UPDATE ITEMS SET price=%s where link=%s",(p,l))
-                    cur.execute('SELECT name, price, addedPrice,link from ITEMS where userId=%s',(user,))
-                    txt = self.buildList(cur.fetchall())
-                    bot.send_message(user,txt,disable_web_page_preview=True)
+                        for l,(_,p) in zip(links,newValues):
+                            cur.execute("UPDATE ITEMS SET price=%s where link=%s",(p,l))
+                        cur.execute('SELECT name, price, addedPrice,link from ITEMS where userId=%s',(user,))
+                        txt = self.buildList(cur.fetchall())
+                        bot.send_message(user,txt,disable_web_page_preview=True)
+                    else:
+                        bot.send_message(user,'Unable to get update for some product')
         except:
             print(traceback.format_exc())
         finally:
             bot.delete_message(message.chat.id, message.message_id)
+
+
+    def scheduleUpdate(self):
+        toUpdate = []
+        print("Schedule update trigger.")
+        bot.send_message(ADMIN,"Schedule update trigger.")
+        try:
+            self.connectToDb()
+            with self.con:
+                with self.con.cursor() as cur:
+                    cur.execute("SELECT userid from ITEMS group by userid")
+                    userids = cur.fetchall()
+                    for u in userids:
+                        cur.execute("SELECT link,price from ITEMS where userid=?",u)
+                        infos = cur.fetchall()
+                        links, oPrice = zip(*infos)
+                        newValues = queryPrice(links)
+                        update = [[p,l] for l,(_,p) in zip(links,newValues)]
+                        print(update)
+                        cur.executemany("UPDATE ITEMS SET price=? where link=?",update)
+                        
+                        # check if price of any product is dropped
+                        for oP,(_,nP) in zip(oPrice,newValues):
+                            if int(nP)<oP:
+                                # note whom to send the notification
+                                toUpdate.append(u)
+                                break
+                
+            with self.con:
+                with self.con.cursor() as cur:
+                    for u in toUpdate:
+                        print(f"Price dropped for items for user {u[0]}")
+                        cur.execute('SELECT name, price, addedPrice, link from ITEMS where userId=?',u)
+                        txt = f"<b>Price dropped for some items in your list.</b>\n<b>{'-'*50}</b>\n\n" + self.buildList(cur.fetchall())
+                        bot.send_message(u[0],txt,disable_web_page_preview=True)
+        except:
+            print(traceback.format_exc())
+
 
 
 
@@ -117,6 +168,7 @@ class DataBase:
 
     def untrack(self,user,_prompt):
         try:
+            self.connectToDb()
             prompt = _prompt.strip('/untrack').strip()
             if len(prompt)==0: # send the list
                 with self.con:
@@ -142,6 +194,7 @@ class DataBase:
 
     def listAll(self):
         try:
+            self.connectToDb()
             with self.con:
                 with self.con.cursor() as cur:
                     cur.execute("Select userId, count(*) from items group by userId;")
@@ -157,7 +210,7 @@ db = DataBase()
 
 
 # NOTE:----------------------------------------------------------
-# amazon does not allow the web scrapping from the cloud, it blocks the heroku ip address
+# amazon does not allow the web scrapping from the cloud
 # will solve this later
 
 
@@ -169,12 +222,13 @@ async def check_price(session:ClientSession, url:str):
         if 'flipkart' in url: # if flipkart
             title = soup.find("span", {"class": "B_NuCI"}).get_text()
             price = soup.find("div", {"class": "_30jeq3 _16Jk6d"}).get_text()[1:].replace(',','')
-        
+            print('checking price',title,price)
+            return title,price #prints the price
+        else:
+            return None
         # elif 'amazon' in url or 'amzn' in url:# for amazon
         #     title = soup.find("span", {"id": "productTitle"}).get_text()
         #     price = soup.find("span", {"class": "a-offscreen"}).get_text()[1:].replace(',','')
-        print('checking price',title,price)
-        return title,price #prints the price
 
 
 async def auxqueryPrice(URLs):
@@ -193,17 +247,21 @@ def check_price_flipkart(url:str):
     page = requests.get(url, headers=headers)
     soup = BeautifulSoup(page.content, 'html.parser')
     # print(soup)
-    if 'flipkart' in url: # if flipkart
-        print('checking for flipkart')
-        title = soup.find("span", {"class": "B_NuCI"}).get_text()
-        price = soup.find("div", {"class": "_30jeq3 _16Jk6d"}).get_text()[1:].replace(',','')
-        return title,price
-    else:
-        print('Unknown website')
-    # elif 'amazon' in url or 'amzn' in url:# for amazon
-    #     print('checking for amazon')
-    #     title = soup.find("span", {"id": "productTitle"}).get_text()
-    #     price = soup.find("span", {"class": "a-offscreen"}).get_text()[1:].replace(',','')
+    try:
+        if 'flipkart' in url: # if flipkart
+            print('checking for flipkart')
+            title = soup.find("span", {"class": "B_NuCI"}).get_text()
+            price = soup.find("div", {"class": "_30jeq3 _16Jk6d"}).get_text()[1:].replace(',','')
+        elif 'amazon' in url or 'amzn' in url:# for amazon
+            print('checking for amazon')
+            title = soup.find("span", {"id": "productTitle"}).get_text()
+            price = soup.find("span", {"class": "a-offscreen"}).get_text()[1:].replace(',','')
+            return title,price
+        else:
+            print('Unknown website')
+    except:
+        print(traceback.format_exc())
+
 
 
 def helpMessage(user):
@@ -254,7 +312,7 @@ def getMessage():
 @server.route("/")
 def webhook():
     bot.remove_webhook()
-    bot.set_webhook(url='https://tele-price-tracker.herokuapp.com/' + TOKEN)
+    bot.set_webhook(url='https://cold-dew-7030.fly.dev/' + TOKEN)
     return '''<div style="text-align: center;">
     <h1>Tele Price Tracker</h1>
     <h3>Send a product link and this bot will track the price for you.</h3>
@@ -266,5 +324,7 @@ def webhook():
 
 if __name__ == "__main__":
     bot.send_message(ADMIN,'Bot Started.')
+    t = Timer(3600, db.scheduleUpdate)
+    t.start()
     from waitress import serve
     serve(server, host="0.0.0.0", port=int(os.environ.get('PORT', 5000)))
