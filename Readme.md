@@ -13,8 +13,8 @@ Send a link to the [Tele Price Tracker Bot](https://t.me/telepricetrackerbot) an
 
 ### Setting up your own bot:
 1. Create a `.env` file and put the following environment variables:
-  1. `TOKEN` - Telegram bot token
-  2. `ADMIN` - Admin's telegram user id
-  3. `DATABASE_URL` - Database URL, just file name if using sqlite
+    1. `TOKEN` - Telegram bot token
+    2. `ADMIN` - Admin's telegram user id
+    3. `DATABASE_URL` - Database URL, just file name if using sqlite
 1. Setup the environment using the `Pipfile`
 1. Start the bot with `pipenv run bot`
