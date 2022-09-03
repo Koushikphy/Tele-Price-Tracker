@@ -172,7 +172,7 @@ class DataBase:
                 with self.con.cursor() as cur:
                     for u in toUpdate:
                         print(f"Price dropped for items for user {u[0]}")
-                        cur.execute('SELECT name, price, addedPrice, link from ITEMS where userId=%s',u)
+                        cur.execute('SELECT name, price, addedPrice, link from ITEMS where userId=%s ORDER BY itemID',u)
                         txt = f"<b>Price dropped for some items in your list.</b>\n<b>{'-'*50}</b>\n\n" + self.buildList(cur.fetchall())
                         bot.send_message(u[0],txt,disable_web_page_preview=True)
             # sendToAdmin('Scheduled update done.')
