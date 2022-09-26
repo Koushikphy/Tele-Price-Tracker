@@ -64,8 +64,8 @@ class DataBase:
         try:
             self.connectToDb()
             # if 'amazon' in _link or 'amzn' in _link:
-            if 'flipkart' not in _link:
-                bot.send_message(user,"Currently this bot only supports Flipkart links.")
+            if 'flipkart' not in _link and "myntra" not in _link:
+                bot.send_message(user,"Currently, this bot does not support link from this website.")
                 return
 
             message = bot.send_message(user, "Searching for the product🧐. Please wait.")
@@ -260,6 +260,22 @@ async def check_price(session:ClientSession, url:str):
             company = soup.find("span", {"class": "G6XhRU"})
             company = company.get_text().strip() if company else ""
             price = soup.find("div", {"class": "_30jeq3 _16Jk6d"})
+            if price:
+                price = price.get_text()[1:].replace(',','')
+            else:
+                return None, None
+            print('checking price',title,price)
+            fullTitle = f"{company} {title}"
+            return fullTitle,price #prints the price
+        elif "myntra" in url:
+            title = soup.find("h1", {"class": "pdp-name"})
+            if title :
+                title = title.get_text().strip()
+            else:
+                return None,None
+            company = soup.find("h1", {"class": "pdp-title"})
+            company = company.get_text().strip() if company else ""
+            price = soup.find("div", {"class": "pdp-price"})
             if price:
                 price = price.get_text()[1:].replace(',','')
             else:
