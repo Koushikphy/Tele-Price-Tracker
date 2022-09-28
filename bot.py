@@ -372,7 +372,7 @@ def getMessage():
 @server.route("/")
 def webhook():
     bot.remove_webhook()
-    bot.set_webhook(url='https://cold-dew-7030.fly.dev/' + TOKEN)
+    bot.set_webhook(url='https://telepricetracker.onrender.com/' + TOKEN)
     return '''<div style="text-align: center;">
     <h1>Tele Price Tracker</h1>
     <h3>Send a product link and this bot will track the price for you.</h3>
